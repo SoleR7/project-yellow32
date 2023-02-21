@@ -19,7 +19,7 @@ void setup(void) {
   u8g2.setFontMode(0);		// enable transparent mode, which is faster
 }
 
-//test
+//test2
 
 void loop(void) {
   u8g2_uint_t x;
