@@ -1,49 +1,62 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
 #include <Wire.h>
+#include <OneButton.h>
 
-U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
+// Button1
+#define BUTTON1 12
+OneButton ob1 = OneButton(BUTTON1, true, true);
 
-u8g2_uint_t offset;			// current offset for the scrolling text
-u8g2_uint_t width;			// pixel width of the scrolling text (must be lesser than 128 unless U8G2_16BIT is defined
-const char *text = "UPV ECO-MARATHON   ";	// scroll this text from right to left
+// OLED initiation
+U8X8_SH1106_128X64_NONAME_HW_I2C u8x8(U8X8_PIN_NONE);
+
+
+void oneclick(){
+  u8x8.clearDisplay();
+  u8x8.drawString(0,1,"Click!");
+  u8x8.drawString(0,2,"\x8d \xbb \xab");
+}
+
+void doubleclick(){
+  Serial.println("double click!");
+  u8x8.clearDisplay();
+  u8x8.drawString(0,1,"Double click!");
+}
+
+void longclick(){
+  u8x8.clearDisplay();
+  u8x8.drawString(0,1,"Long click!");
+}
 
 
 void setup(void) {
+  Serial.begin(115200);
 
-  u8g2.begin();  
-  
-  u8g2.setFont(u8g2_font_inb30_mr);	// set the target font to calculate the pixel width
-  width = u8g2.getUTF8Width(text);		// calculate the pixel width of the text
-  
-  u8g2.setFontMode(0);		// enable transparent mode, which is faster
+  ob1.attachClick(oneclick);
+  ob1.attachDoubleClick(doubleclick);
+  ob1.attachLongPressStart(longclick);
+
+  u8x8.begin();
+  u8x8.setFont(u8x8_font_amstrad_cpc_extended_f);
 }
 
-//test2
-
 void loop(void) {
-  u8g2_uint_t x;
   
-  u8g2.firstPage();
-  do {
+  /*
+  u8x8.drawString(0,1,"0-1");
+  u8x8.drawString(0,2,"0-2");
+  u8x8.drawString(0,3,"0-3");
+  u8x8.drawString(0,4,"0-4");
+  u8x8.drawString(0,5,"0-5");
+  u8x8.drawString(0,6,"0-6");
+  u8x8.drawString(0,7,"0-7");
+  u8x8.drawString(3,1,"3-1");
+  u8x8.drawString(6,1,"3-1");
+  u8x8.drawString(9,1,"9-1");
+  u8x8.drawString(12,1,"12-1");
+  */
   
-    // draw the scrolling text at current offset
-    x = offset;
-    u8g2.setFont(u8g2_font_inb30_mr);		// set the target font
-    do {								// repeated drawing of the scrolling text...
-      u8g2.drawUTF8(x, 30, text);			// draw the scolling text
-      x += width;						// add the pixel width of the scrolling text
-    } while( x < u8g2.getDisplayWidth() );		// draw again until the complete display is filled
-    
-    u8g2.setFont(u8g2_font_inb16_mr);		// draw the current pixel width
-    u8g2.setCursor(0, 58);
-    u8g2.print("123456789");					// this value must be lesser than 128 unless U8G2_16BIT is set
-    
-  } while ( u8g2.nextPage() );
-  
-  offset-=1;							// scroll by one pixel
-  if ( (u8g2_uint_t)offset < (u8g2_uint_t)-width )	
-    offset = 0;							// start over again
-    
-  delay(10);
+
+  ob1.tick();
+
 }
