@@ -39,12 +39,25 @@ void longclick(){
   u8x8.drawString(0,1,"Long click!");
 }
 
+void displayGPSinfo(String lat, String lon, String speed, String nSat){
+  u8x8.clearDisplay();
+  u8x8.setCursor(0, 1);
+  u8x8.print(lat);
+  u8x8.setCursor(0, 2);
+  u8x8.print(lon);
+  u8x8.setCursor(0, 3);
+  u8x8.print(speed);
+  u8x8.setCursor(0, 4);
+  u8x8.print(nSat);
+   
+}
+
 
 void setup(void) {
   Serial.begin(115200);
 
   //Set I2C (SDA, SCL) Comunication speed to it's minimum (10khz) for the OLED screen.
-  Wire.setClock(10000);
+  //Wire.setClock(10000);
 
   // Button1 calls
   ob1.attachClick(oneclick);
@@ -75,16 +88,12 @@ void setup(void) {
 
 }
 
+
+
 void loop(void) {
   
   // Button1 'listener'
   ob1.tick();
-
-  /*
-  u8x8.drawString(0,1,"0-1");
-  u8x8.drawString(9,1,"9-1");
-  u8x8.drawString(12,1,"12-1");
-  */
   
   // GPS
   char c = GPS.read();
@@ -114,17 +123,17 @@ void loop(void) {
     Serial.println(GPS.year, DEC);
 
     Serial.print("Fix: "); Serial.print((int)GPS.fix);
-    Serial.print(" Quality: "); Serial.println((int)GPS.fixquality);
-    if (GPS.fix) {
+    
+    if (GPS.fix) {  
       Serial.print("Location: ");
-      Serial.print(GPS.latitude, 4); Serial.print(GPS.lat);
+      Serial.print(GPS.latitudeDegrees, 4);
       Serial.print(", ");
-      Serial.print(GPS.longitude, 4); Serial.println(GPS.lon);
-      Serial.print("Speed (knots): "); Serial.println(GPS.speed);
-      Serial.print("Angle: "); Serial.println(GPS.angle);
-      Serial.print("Altitude: "); Serial.println(GPS.altitude);
+      Serial.println(GPS.longitudeDegrees, 4);
+      Serial.print("Speed (knots): "); Serial.println(GPS.speed);      
       Serial.print("Satellites: "); Serial.println((int)GPS.satellites);
-      Serial.print("Antenna status: "); Serial.println((int)GPS.antenna);
+
+      displayGPSinfo(String(GPS.latitudeDegrees, 4), String(GPS.longitudeDegrees, 4), String(GPS.speed), String(GPS.satellites));
+
     }
   }
 
