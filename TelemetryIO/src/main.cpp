@@ -3,6 +3,9 @@
 #include <Wire.h>
 #include <OneButton.h>
 #include <Adafruit_GPS.h>
+#include "FS.h"
+#include "SD.h"
+#include <SPI.h>
 
 // Button1
 #define BUTTON1 12
@@ -20,6 +23,9 @@ Adafruit_GPS GPS(&GPSSerial);
 
 //DEBUG
 uint32_t timer = millis();
+
+//SD Card
+String dataMessage;
 
 
 void oneclick(){
@@ -50,6 +56,56 @@ void displayGPSinfo(String lat, String lon, String speed, String nSat){
   u8x8.setCursor(0, 4);
   u8x8.print(nSat);
    
+}
+
+
+void writeFile(fs::FS &fs, const char * path, const char * message) {
+  Serial.printf("Writing file: %s\n", path);
+
+  File file = fs.open(path, FILE_WRITE);
+  
+  if(!file) {
+    Serial.println("Failed to open file for writing");
+    return;
+  }
+  if(file.print(message)) {
+    Serial.println("File written");
+  } else {
+    Serial.println("Write failed");
+  }
+  file.close();
+}
+
+
+void appendFile(fs::FS &fs, const char * path, const char * message) {
+  Serial.printf("Appending to file: %s\n", path);
+
+  File file = fs.open(path, FILE_APPEND);
+  if(!file) {
+    Serial.println("Failed to open file for appending");
+    return;
+  }
+  if(file.print(message)) {
+    Serial.println("Message appended");
+  } else {
+    Serial.println("Append failed");
+  }
+  file.close();
+}
+
+
+void setupSDcardReader(){
+  if(!SD.begin()){
+    Serial.println("Card Mount Fail");
+    return;
+  }
+
+  uint8_t cardType = SD.cardType();
+
+  if(cardType == CARD_NONE){
+    Serial.println("No SD card attached");
+    return;
+  }
 }
 
 
@@ -84,6 +140,23 @@ void setup(void) {
   // Request updates on antenna status, comment out to keep quiet
   GPS.sendCommand(PGCMD_ANTENNA);
 
+  //Comentar pinaje de cada cosa
+  //setupBtn1();
+  //setupOLED();
+  //setupGPS();
+  setupSDcardReader();
+  File file = SD.open("/test.txt");
+  
+  if(!file) {
+    Serial.println("File doesn't exist");
+    Serial.println("Creating file...");
+    writeFile(SD, "/test.txt", "Hello, how are you?? \r\n");
+  }
+  else {
+    Serial.println("File already exists");  
+  }
+  file.close();
+
   delay(1000);
 
 }
@@ -99,7 +172,7 @@ void loop(void) {
   char c = GPS.read();
 
    if (GPS.newNMEAreceived()) {
-    Serial.print(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
+    //Serial.print(GPS.lastNMEA()); // this also sets the newNMEAreceived() flag to false
     if (!GPS.parse(GPS.lastNMEA())) // this also sets the newNMEAreceived() flag to false
       return; // we can fail to parse a sentence in which case we should just wait for another
   }
@@ -133,6 +206,10 @@ void loop(void) {
       Serial.print("Satellites: "); Serial.println((int)GPS.satellites);
 
       displayGPSinfo(String(GPS.latitudeDegrees, 4), String(GPS.longitudeDegrees, 4), String(GPS.speed), String(GPS.satellites));
+
+      dataMessage = String(GPS.latitudeDegrees, 4) + ", " + String(GPS.longitudeDegrees, 4) + ", " + String(GPS.speed) + ", " + String(GPS.satellites) + "\r\n";
+
+      appendFile(SD, "/test.txt", dataMessage.c_str());
 
     }
   }
