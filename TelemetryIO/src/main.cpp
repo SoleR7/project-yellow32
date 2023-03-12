@@ -129,7 +129,8 @@ void setup(void) {
   GPS.begin(9600);
 
   // uncomment this line to turn on RMC (recommended minimum) and GGA (fix data) including altitude
-  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+  //GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_ALLDATA);
   
   // uncomment this line to turn on only the "minimum recommended" data
   //GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
@@ -145,12 +146,12 @@ void setup(void) {
   //setupOLED();
   //setupGPS();
   setupSDcardReader();
-  File file = SD.open("/test.txt");
+  File file = SD.open("/testAntena.txt");
   
   if(!file) {
     Serial.println("File doesn't exist");
     Serial.println("Creating file...");
-    writeFile(SD, "/test.txt", "Hello, how are you?? \r\n");
+    writeFile(SD, "/testAntena.txt", "Antena descubierta \r\n");
   }
   else {
     Serial.println("File already exists");  
@@ -196,6 +197,7 @@ void loop(void) {
     Serial.println(GPS.year, DEC);
 
     Serial.print("Fix: "); Serial.print((int)GPS.fix);
+    Serial.print("\tExternal Antena: "); Serial.println((int)GPS.antenna);
     
     if (GPS.fix) {  
       Serial.print("Location: ");
@@ -209,7 +211,7 @@ void loop(void) {
 
       dataMessage = String(GPS.latitudeDegrees, 4) + ", " + String(GPS.longitudeDegrees, 4) + ", " + String(GPS.speed) + ", " + String(GPS.satellites) + "\r\n";
 
-      appendFile(SD, "/test.txt", dataMessage.c_str());
+      appendFile(SD, "/testAntena.txt", dataMessage.c_str());
 
     }
   }
